@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.lang.invoke.MethodHandles;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -129,11 +130,6 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
   @Autowired
   PreferencesService preferenceService;
 
-  public interface OnCreateGameListener {
-
-    void onCreateGame(NewGameInfo newGameInfo);
-  }
-
   @Autowired
   I18n i18n;
 
@@ -163,8 +159,6 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
 
   private Stage createGameDialogStage;
 
-  private OnCreateGameListener onGameCreateListener;
-
   private ModInfoBean selectedMod;
 
   public GamesController() {
@@ -179,61 +173,61 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
     createGamePanel.managedProperty().bind(createGamePanel.visibleProperty());
 
 
-      rankingSlider.setFocusTraversable(false);
-      rankingSlider.lowValueProperty().addListener((observable, oldValue, newValue) -> {
-          if (newValue.intValue() < rankingSlider.getHighValue()) {
-              minRankingTextField.setText(String.valueOf(newValue.intValue()));
-          }
-      });
-      rankingSlider.highValueProperty().addListener((observable, oldValue, newValue) -> {
-          if (newValue.intValue() > rankingSlider.getLowValue()) {
-              maxRankingTextField.setText(String.valueOf(newValue.intValue()));
-          }
-      });
-      minRankingTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-          rankingSlider.setLowValue(Double.parseDouble(newValue));
-      });
-      maxRankingTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-          rankingSlider.setHighValue(Double.parseDouble(newValue));
-      });
+    rankingSlider.setFocusTraversable(false);
+    rankingSlider.lowValueProperty().addListener((observable, oldValue, newValue) -> {
+      if (newValue.intValue() < rankingSlider.getHighValue()) {
+        minRankingTextField.setText(String.valueOf(newValue.intValue()));
+      }
+    });
+    rankingSlider.highValueProperty().addListener((observable, oldValue, newValue) -> {
+      if (newValue.intValue() > rankingSlider.getLowValue()) {
+        maxRankingTextField.setText(String.valueOf(newValue.intValue()));
+      }
+    });
+    minRankingTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+      rankingSlider.setLowValue(Double.parseDouble(newValue));
+    });
+    maxRankingTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+      rankingSlider.setHighValue(Double.parseDouble(newValue));
+    });
 
-      rankingSlider.setMax(2500);
-      rankingSlider.setMin(0);
-      rankingSlider.setHighValue(1300);
-      rankingSlider.setLowValue(800);
+    rankingSlider.setMax(2500);
+    rankingSlider.setMin(0);
+    rankingSlider.setHighValue(1300);
+    rankingSlider.setLowValue(800);
 
-      mapComboBox.setButtonCell(new ListCell<MapInfoBean>() {
-          @Override
-          protected void updateItem(MapInfoBean item, boolean empty) {
-              super.updateItem(item, empty);
-              if (item == null || empty) {
-                  return;
-              }
+    mapComboBox.setButtonCell(new ListCell<MapInfoBean>() {
+      @Override
+      protected void updateItem(MapInfoBean item, boolean empty) {
+        super.updateItem(item, empty);
+        if (item == null || empty) {
+          return;
+        }
 
-              Image mapPreview = mapService.loadSmallPreview(item.getName());
-              setGraphic(new ImageView(mapPreview));
-              setText(item.getName());
-          }
-      });
+        Image mapPreview = mapService.loadSmallPreview(item.getName());
+        setGraphic(new ImageView(mapPreview));
+        setText(item.getName());
+      }
+    });
 
-      additionalModsCheckComboBox.setConverter(new StringConverter<ModInfoBean>() {
-          @Override
-          public String toString(ModInfoBean object) {
-              return object.getFullName();
-          }
+    additionalModsCheckComboBox.setConverter(new StringConverter<ModInfoBean>() {
+      @Override
+      public String toString(ModInfoBean object) {
+        return object.getFullName();
+      }
 
-          @Override
-          public ModInfoBean fromString(String string) {
-              return null;
-          }
-      });
+      @Override
+      public ModInfoBean fromString(String string) {
+        return null;
+      }
+    });
 
     additionalModsCheckComboBox.skinProperty().addListener(new ChangeListener<Skin>() {
       @Override
       public void changed(ObservableValue<? extends Skin> observable, Skin oldValue, Skin newValue) {
-        if(oldValue==null && newValue!=null){
-          CheckComboBoxSkin skin = (CheckComboBoxSkin)newValue;
-          ComboBox combo = (ComboBox)skin.getChildren().get(0);
+        if (oldValue == null && newValue != null) {
+          CheckComboBoxSkin skin = (CheckComboBoxSkin) newValue;
+          ComboBox combo = (ComboBox) skin.getChildren().get(0);
           combo.setPrefWidth(300.0);
           combo.setMaxWidth(Double.MAX_VALUE);
         }
@@ -341,6 +335,42 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
 
   }
 
+  public void onHostButtonClicked(ActionEvent actionEvent) {
+    NewGameInfo newGameInfo = new NewGameInfo(
+        titleTextField.getText(),
+        StringUtils.stripToNull(passwordTextField.getText()),
+        // FIXME insert whatever is selected in the button
+        "faf",
+        mapComboBox.getValue().getName(),
+        0
+    );
+
+    gameService.hostGame(newGameInfo, new Callback<Void>() {
+      @Override
+      public void success(Void result) {
+        createGamePanel.setVisible(false);
+      }
+
+      @Override
+      public void error(Throwable e) {
+  // FIXME display error
+      }
+    });
+  }
+
+  /*public void setMods(Collection<ModInfoBean> knownMods) {
+    modComboBox.getItems().setAll(knownMods);
+    modComboBox.setCellFactory(param -> new ModListCell());
+
+    String lastGameMod = preferenceService.getPreferences().getLastGameMod();
+    for (ModInfoBean mod : knownMods) {
+      if (Objects.equals(mod.getName(), lastGameMod)) {
+        modComboBox.getSelectionModel().select(mod);
+        break;
+      }
+    }
+  }*/
+
   private static String extractRating(String title) {
     Matcher matcher = RATING_PATTERN.matcher(title);
     if (matcher.find()) {
@@ -383,7 +413,7 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
   }
 
   public void onTableClicked(MouseEvent event) {
-    if(event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
+    if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
       joinSelectedGame();
     }
   }
@@ -402,18 +432,14 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
   }
 
   public void onCreateGameButtonClicked(ActionEvent actionEvent) {
-    onGameCreateListener.onCreateGame(
-            new NewGameInfo(
-                    titleTextField.getText(),
-                    passwordTextField.getText(),
-                    selectedMod.getName(),
-                    mapComboBox.getValue().getName(),
-                0)
-    );
+    createGamePanel.setVisible(!createGamePanel.isVisible());
+
+    ObservableList<MapInfoBean> localMaps = mapService.getLocalMaps();
+    setMaps(localMaps);
   }
 
-  public void setOnGameCreateListener(OnCreateGameListener listener) {
-    onGameCreateListener = listener;
+  public void closeGameDialog() {
+    createGamePanel.visibleProperty().setValue(false);
   }
 
 }
