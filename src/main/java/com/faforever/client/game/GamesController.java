@@ -37,6 +37,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -127,6 +128,18 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
   @FXML
   SplitMenuButton showCreateGamePanelButton;
 
+  @FXML
+  VBox gameMapPane;
+
+  @FXML
+  VBox spacingPane;
+
+  @FXML
+  VBox createGameBox;
+
+  @FXML
+  HBox HboxLabel;
+
   @Autowired
   PreferencesService preferenceService;
 
@@ -171,7 +184,8 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
     initializeGameTable();
 
     createGamePanel.managedProperty().bind(createGamePanel.visibleProperty());
-
+    gameMapPane.managedProperty().bind(gameMapPane.visibleProperty());
+    spacingPane.managedProperty().bind(spacingPane.visibleProperty());
 
     rankingSlider.setFocusTraversable(false);
     rankingSlider.lowValueProperty().addListener((observable, oldValue, newValue) -> {
@@ -433,13 +447,20 @@ public class GamesController implements OnGameInfoListener, OnModInfoListener, C
 
   public void onCreateGameButtonClicked(ActionEvent actionEvent) {
     createGamePanel.setVisible(!createGamePanel.isVisible());
-
+    spacingPane.setVisible(!spacingPane.isVisible());
+    gameMapPane.setVisible(!gameMapPane.isVisible());
+    HboxLabel.setVisible(!HboxLabel.isVisible());
+    createGameBox.setVisible(!createGameBox.isVisible());
     ObservableList<MapInfoBean> localMaps = mapService.getLocalMaps();
     setMaps(localMaps);
   }
 
   public void closeGameDialog() {
     createGamePanel.visibleProperty().setValue(false);
+    spacingPane.visibleProperty().setValue(false);
+    gameMapPane.visibleProperty().setValue(false);
+    createGameBox.visibleProperty().setValue(false);
+    HboxLabel.visibleProperty().setValue(false);
   }
 
 }
