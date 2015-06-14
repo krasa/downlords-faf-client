@@ -182,8 +182,13 @@
                                           <Insets bottom="10.0" />
                                        </HBox.margin>
                                        <children>
+                                          <ImageView fitHeight="253.0" fitWidth="253.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@images/world_map.png" />
+                                             </image>
+                                          </ImageView>
                                           <ImageView fx:id="mapImageView" fitHeight="256.0" fitWidth="256.0" pickOnBounds="true" preserveRatio="true" styleClass="mapPreviewImage" />
-                                          <ImageView fitHeight="275.0" fitWidth="268.0" pickOnBounds="true" preserveRatio="true">
+                                          <ImageView fitHeight="275.0" fitWidth="270.0" pickOnBounds="true" preserveRatio="true" translateY="1.0">
                                              <image>
                                                 <Image url="@images/border.png" />
                                              </image>
